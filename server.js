@@ -1,51 +1,27 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+const express = require('express')
+const app = express()
+const path = require('path')
+const Check = require('./mongo')
+const tempelatePath = path.join(__dirname,'./tempelates')
 
-const app = express();
+app.use(express.json())
+app.use(express.urlencoded({extended:false}))
 
-// MongoDB Connection
-mongoose.connect('mongodb://localhost:27017/website', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-
-// Define a schema for the data
-const formDataSchema = new mongoose.Schema({
-  fullName: String,
-  message: String
-});
-
-const FormData = mongoose.model('FormData', formDataSchema);
-
-// Middleware
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
+app.set('view engine',"hbs")
+app.set("views", tempelatePath)
+app.get('/',(req, res) => {
+    res.render('signUP')
+})
 // Route to handle form submission
 app.post('/submit-form', async (req, res) => {
-  try {
-    const { fullName, message } = req.body;
-
-    // Create a new form data document
-    const newFormData = new FormData({
-      fullName,
-      message
-    });
-
-    // Save the form data to the database
-    await newFormData.save();
-
-    res.status(200).send('Form data saved successfully!');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Internal server error');
-  }
+    const name = req.body.name
+    const phoneNumber = req.body.phoneNumber
+    const username = req.body.username
+    const password = req.body.password
+    await Check.insertMany([{name,phoneNumber,username,password}])
+    res.send("sent")
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.listen(5000,() => {
+    console.log("port connected");
+})

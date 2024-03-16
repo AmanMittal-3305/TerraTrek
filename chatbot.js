@@ -1,23 +1,20 @@
-// JavaScript
 const chatbotToggler = document.querySelector(".chatbot-toggler");
 const closeBtn = document.querySelector(".close-btn");
-const chatbot = document.querySelector(".chatbot"); // Changed the variable name to avoid confusion with chatbox
+const chatbox = document.querySelector(".chatbox");
 const chatInput = document.querySelector(".chat-input textarea");
 const sendChatBtn = document.querySelector(".chat-input span");
 
 let userMessage = null; // Variable to store user's message
-const API_KEY = "YOUR_OPENAI_API_KEY"; // Paste your API key here
+const API_KEY = "YOUR_API_KEY";  
 const inputInitHeight = chatInput.scrollHeight;
 
 const createChatLi = (message, className) => {
     // Create a chat <li> element with passed message and className
     const chatLi = document.createElement("li");
-    chatLi.classList.add("chat", className);
-    if (className === "incoming") {
-        chatLi.innerHTML = `<span class="material-symbols-outlined">smart_toy</span><p>${message}</p>`;
-    } else {
-        chatLi.innerHTML = `<p>${message}</p>`;
-    }
+    chatLi.classList.add("chat", `${className}`);
+    let chatContent = className === "outgoing" ? `<p></p>` : `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
+    chatLi.innerHTML = chatContent;
+    chatLi.querySelector("p").textContent = message;
     return chatLi; // return chat <li> element
 }
 
@@ -38,27 +35,18 @@ const generateResponse = (chatElement) => {
         })
     }
 
-    // Send POST request to API, get response and set the response as paragraph text
-    fetch(API_URL, requestOptions)
-        .then(res => {
-            if (!res.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return res.json();
-        })
-        .then(data => {
-            messageElement.textContent = data.choices[0].message.content.trim();
-        })
-        .catch(() => {
-            messageElement.classList.add("error");
-            messageElement.textContent = "Oops! Something went wrong. Please try again.";
-        })
-        .finally(() => chatbox.scrollTo(0, chatbox.scrollHeight));
+    // Send POST request to API, get response and set the reponse as paragraph text
+    fetch(API_URL, requestOptions).then(res => res.json()).then(data => {
+        messageElement.textContent = data.choices[0].message.content.trim();
+    }).catch(() => {
+        messageElement.classList.add("error");
+        messageElement.textContent = "Oops! Something went wrong. Please try again.";
+    }).finally(() => chatbox.scrollTo(0, chatbox.scrollHeight));
 }
 
 const handleChat = () => {
     userMessage = chatInput.value.trim(); // Get user entered message and remove extra whitespace
-    if (!userMessage) return;
+    if(!userMessage) return;
 
     // Clear the input textarea and set its height to default
     chatInput.value = "";
@@ -67,7 +55,7 @@ const handleChat = () => {
     // Append the user's message to the chatbox
     chatbox.appendChild(createChatLi(userMessage, "outgoing"));
     chatbox.scrollTo(0, chatbox.scrollHeight);
-
+    
     setTimeout(() => {
         // Display "Thinking..." message while waiting for the response
         const incomingChatLi = createChatLi("Thinking...", "incoming");
@@ -86,18 +74,12 @@ chatInput.addEventListener("input", () => {
 chatInput.addEventListener("keydown", (e) => {
     // If Enter key is pressed without Shift key and the window 
     // width is greater than 800px, handle the chat
-    if (e.key === "Enter" && !e.shiftKey && window.innerWidth > 800) {
+    if(e.key === "Enter" && !e.shiftKey && window.innerWidth > 800) {
         e.preventDefault();
         handleChat();
     }
 });
 
 sendChatBtn.addEventListener("click", handleChat);
-
-closeBtn.addEventListener("click", () => {
-    chatbot.classList.remove("show"); // Toggle visibility of chatbot
-});
-
-chatbotToggler.addEventListener("click", () => {
-    chatbot.classList.toggle("show"); // Toggle visibility of chatbot
-});
+closeBtn.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
+chatbotToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
